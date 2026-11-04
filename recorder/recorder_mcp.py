@@ -21,7 +21,8 @@ import webbrowser
 
 CONFIG_PATH = os.path.expanduser("~/.config/recorder-mcp/config.json")
 PAIR_LOCK = os.path.expanduser("~/.config/recorder-mcp/pairing.lock")
-PAIR_TIMEOUT = 180
+PAIR_URL = os.path.expanduser("~/.config/recorder-mcp/pairing.url")
+PAIR_TIMEOUT = 600
 PROTOCOL_VERSION = "2025-06-18"
 
 # The app is reached over the LAN, where a system HTTP proxy would answer 502.
@@ -156,7 +157,7 @@ poll();
 """.format(mac_name=mac_name, qr=qr_html, payload=payload)
 
 
-def run_pair():
+def run_pair(auto_open=True):
     nonce = secrets.token_urlsafe(12)
     ip = lan_ip()
     mac_name = computer_name()
@@ -243,7 +244,16 @@ def run_pair():
 
     page_url = "http://127.0.0.1:{}/".format(port)
     print("Pairing page: " + page_url, file=sys.stderr)
-    threading.Thread(target=webbrowser.open, args=(page_url,), daemon=True).start()
+    try:
+        os.makedirs(os.path.dirname(PAIR_URL), exist_ok=True)
+        with open(PAIR_URL, "w") as handle:
+            handle.write(page_url)
+        with open(PAIR_LOCK, "w") as handle:
+            handle.write(str(int(time.time())))
+    except OSError:
+        pass
+    if auto_open:
+        threading.Thread(target=webbrowser.open, args=(page_url,), daemon=True).start()
 
     timer = threading.Timer(PAIR_TIMEOUT, server.shutdown)
     timer.daemon = True
@@ -252,10 +262,11 @@ def run_pair():
         server.serve_forever()
     finally:
         timer.cancel()
-        try:
-            os.remove(PAIR_LOCK)
-        except OSError:
-            pass
+        for path in (PAIR_LOCK, PAIR_URL):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
     if state["paired"]:
         print(
@@ -305,6 +316,47 @@ def auto_pair(force=False):
         pass
 
 
+def pairing_link():
+    """Pairing page URL for the user to open themselves; never opens a browser."""
+
+    def live():
+        try:
+            if time.time() - os.path.getmtime(PAIR_URL) < PAIR_TIMEOUT:
+                with open(PAIR_URL) as handle:
+                    return handle.read().strip() or None
+        except OSError:
+            pass
+        return None
+
+    link = live()
+    if link:
+        return link
+
+    try:
+        starting = time.time() - os.path.getmtime(PAIR_LOCK) < PAIR_TIMEOUT
+    except OSError:
+        starting = False
+
+    if not starting:
+        try:
+            os.makedirs(os.path.dirname(PAIR_URL), exist_ok=True)
+            subprocess.Popen(
+                [sys.executable, os.path.abspath(__file__), "pair", "--no-open"],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError:
+            return None
+
+    for _ in range(40):
+        time.sleep(0.1)
+        link = live()
+        if link:
+            return link
+    return None
+
+
 def load_config():
     url = os.environ.get("RECORDER_URL", "")
     token = os.environ.get("RECORDER_TOKEN", "")
@@ -352,15 +404,22 @@ def request(path, params=None, body=None):
             )
         raise RuntimeError("Recorder returned HTTP {}".format(error.code))
     except urllib.error.URLError as error:
-        auto_pair(force=True)
+        link = pairing_link()
+        extra = (
+            "\nIf the iPhone changed networks, open this page and scan the code "
+            "from Recorder > Settings > LAN Access (valid for {} minutes):\n{}".format(
+                PAIR_TIMEOUT // 60, link
+            )
+            if link
+            else "\nIf the iPhone changed networks, run `python3 {} pair`.".format(
+                os.path.abspath(__file__)
+            )
+        )
         raise RuntimeError(
             "Cannot reach Recorder at {} ({}).\n"
-            "A pairing page has opened on your Mac: open Recorder > Settings > "
-            "LAN Access on the iPhone, turn on Enable, tap Add computer and scan "
-            "the code. If no page opened, run `python3 {} pair`.\n"
-            "Also check that Recorder is open on the iPhone and that this Mac and "
-            "the iPhone are on the same Wi-Fi.".format(
-                base_url, error.reason, os.path.abspath(__file__)
+            "Check that the iPhone is unlocked, Recorder is open, and that this Mac "
+            "and the iPhone are on the same Wi-Fi.{}".format(
+                base_url, error.reason, extra
             )
         )
 
@@ -457,7 +516,7 @@ def main():
         print("Saved " + CONFIG_PATH)
         return
     if len(sys.argv) > 1 and sys.argv[1] == "pair":
-        run_pair()
+        run_pair(auto_open="--no-open" not in sys.argv[2:])
         return
     serve()
 
