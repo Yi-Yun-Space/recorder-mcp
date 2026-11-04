@@ -1,6 +1,6 @@
 {
   "name": "recorder",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Query transcripts stored in the Recorder iPhone app over the local network.",
   "author": {
     "name": "Yi-Yun-Space"
