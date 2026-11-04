@@ -24,6 +24,9 @@ PAIR_LOCK = os.path.expanduser("~/.config/recorder-mcp/pairing.lock")
 PAIR_TIMEOUT = 180
 PROTOCOL_VERSION = "2025-06-18"
 
+# The app is reached over the LAN, where a system HTTP proxy would answer 502.
+OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
 def fetch_tools():
     return request("/tools", {}).get("tools", [])
 
@@ -338,7 +341,7 @@ def request(path, params=None, body=None):
 
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=20) as response:
+        with OPENER.open(req, timeout=20) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
         if error.code == 401:
