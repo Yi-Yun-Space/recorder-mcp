@@ -510,6 +510,32 @@ def run_set(argv):
     save_config(args.url, args.token)
 
 
+def run_status():
+    try:
+        base_url, _token = load_config()
+    except RuntimeError:
+        print("Recorder is not paired yet.")
+        link = pairing_link()
+        if link:
+            print("Pair within {} minutes:".format(PAIR_TIMEOUT // 60))
+            print(link)
+            print(
+                "On the iPhone: Recorder > Settings > LAN Access, turn on Enable, "
+                "tap Add computer and scan the page."
+            )
+        else:
+            print("Start pairing with: python3 {} pair".format(os.path.abspath(__file__)))
+        return 1
+
+    try:
+        request("/health")
+    except RuntimeError as error:
+        print(str(error))
+        return 1
+    print("Recorder is reachable at {}.".format(base_url))
+    return 0
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "set":
         run_set(sys.argv[2:])
@@ -518,6 +544,8 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "pair":
         run_pair(auto_open="--no-open" not in sys.argv[2:])
         return
+    if len(sys.argv) > 1 and sys.argv[1] == "status":
+        sys.exit(run_status())
     serve()
 
 
