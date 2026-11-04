@@ -1,0 +1,16 @@
+{
+  "name": "recorder-marketplace",
+  "owner": {
+    "name": "Yi-Yun-Space"
+  },
+  "metadata": {
+    "description": "Plugins for the Recorder iPhone app."
+  },
+  "plugins": [
+    {
+      "name": "recorder",
+      "source": "./recorder",
+      "description": "Query transcripts stored in the Recorder iPhone app over the local network."
+    }
+  ]
+}

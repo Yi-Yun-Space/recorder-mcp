@@ -1,0 +1,8 @@
+{
+  "name": "recorder",
+  "version": "0.3.0",
+  "description": "Query transcripts stored in the Recorder iPhone app over the local network.",
+  "author": {
+    "name": "Yi-Yun-Space"
+  }
+}
