@@ -8,7 +8,7 @@ description: Diagnose why the Recorder tools are missing or failing. Use when th
 Run this and relay its output to the user in their own language:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/recorder/recorder_mcp.py" status
+python3 "${CLAUDE_PLUGIN_ROOT}/recorder_mcp.py" status
 ```
 
 Then:
