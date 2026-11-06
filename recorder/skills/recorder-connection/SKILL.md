@@ -14,6 +14,8 @@ python3 "${CLAUDE_PLUGIN_ROOT}/recorder_mcp.py" status
 Then:
 
 - Put any `http://127.0.0.1:…` link on its own line so the user can click it.
-- If a link is printed, say it stays valid for 10 minutes and that pairing happens on the iPhone under Recorder → Settings → LAN Access.
+- If the output names a `QR image:` path and that file exists, send the image to the user in your reply.
+- Say the code stays valid for 10 minutes, and that pairing happens on the iPhone under Recorder → Settings → LAN Access.
+- Always finish by telling the user to open a new session before asking about recordings — the plugin's tools only load when a session starts.
 - Do not retry the recorder tools while the check reports the app is unreachable.
 - Do not try to read recordings yourself through Bash, files, or the network.

@@ -22,6 +22,7 @@ import webbrowser
 CONFIG_PATH = os.path.expanduser("~/.config/recorder-mcp/config.json")
 PAIR_LOCK = os.path.expanduser("~/.config/recorder-mcp/pairing.lock")
 PAIR_URL = os.path.expanduser("~/.config/recorder-mcp/pairing.url")
+PAIR_QR = os.path.expanduser("~/.config/recorder-mcp/pairing.png")
 PAIR_TIMEOUT = 600
 PROTOCOL_VERSION = "2025-06-18"
 
@@ -250,6 +251,10 @@ def run_pair(auto_open=True):
             handle.write(page_url)
         with open(PAIR_LOCK, "w") as handle:
             handle.write(str(int(time.time())))
+        if values["qr"]:
+            with open(PAIR_QR, "wb") as handle:
+                handle.write(base64.b64decode(values["qr"]))
+            print("QR image: " + PAIR_QR, file=sys.stderr)
     except OSError:
         pass
     if auto_open:
@@ -262,7 +267,7 @@ def run_pair(auto_open=True):
         server.serve_forever()
     finally:
         timer.cancel()
-        for path in (PAIR_LOCK, PAIR_URL):
+        for path in (PAIR_LOCK, PAIR_URL, PAIR_QR):
             try:
                 os.remove(path)
             except OSError:
@@ -357,6 +362,10 @@ def pairing_link():
     return None
 
 
+def qr_hint():
+    return "\nQR image: {}".format(PAIR_QR) if os.path.exists(PAIR_QR) else ""
+
+
 def load_config():
     url = os.environ.get("RECORDER_URL", "")
     token = os.environ.get("RECORDER_TOKEN", "")
@@ -407,8 +416,8 @@ def request(path, params=None, body=None):
         link = pairing_link()
         extra = (
             "\nIf the iPhone changed networks, open this page and scan the code "
-            "from Recorder > Settings > LAN Access (valid for {} minutes):\n{}".format(
-                PAIR_TIMEOUT // 60, link
+            "from Recorder > Settings > LAN Access (valid for {} minutes):\n{}{}".format(
+                PAIR_TIMEOUT // 60, link, qr_hint()
             )
             if link
             else "\nIf the iPhone changed networks, run `python3 {} pair`.".format(
@@ -519,6 +528,8 @@ def run_status():
         if link:
             print("Pair within {} minutes:".format(PAIR_TIMEOUT // 60))
             print(link)
+            if os.path.exists(PAIR_QR):
+                print("QR image: " + PAIR_QR)
             print(
                 "On the iPhone: Recorder > Settings > LAN Access, turn on Enable, "
                 "tap Add computer and scan the page."
