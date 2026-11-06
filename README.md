@@ -6,15 +6,15 @@ Lets Claude Code read and summarize the recordings stored in the **Recorder** iP
 
 Open a Claude Code session and send this message:
 
-> Install the recorder plugin: https://github.com/Yi-Yun-Space/recorder-mcp
+> Install the recorder plugin and show me the pairing code: https://github.com/Yi-Yun-Space/recorder-mcp
 
-Claude Code adds the marketplace and installs the plugin for you.
+Claude Code adds the marketplace, installs the plugin, and runs its pairing step. Scan the code it shows with **Add computer** on the iPhone.
 
-Then **start a new session**. Plugin tools only load when a session starts — in the terminal you can run `/reload-plugins` instead of restarting.
+Then **open a new session**. Plugin tools only load when a session starts.
 
 ## Pair the iPhone
 
-The first session that runs the plugin opens a pairing page in your browser. On the iPhone:
+Pairing runs during install. If that was skipped, the first session that runs the plugin opens a pairing page in your browser. On the iPhone:
 
 1. Open Recorder → Settings → LAN Access and turn on **Enable**. Keep that screen open.
 2. Tap **Add computer** and scan the code shown on the Mac.
