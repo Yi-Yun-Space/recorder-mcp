@@ -4,13 +4,13 @@
     "name": "Yi-Yun-Space"
   },
   "metadata": {
-    "description": "Plugins for the Recorder iPhone app."
+    "description": "Plugins for the FrameMemo iPhone app."
   },
   "plugins": [
     {
       "name": "recorder",
       "source": "./recorder",
-      "description": "Query transcripts stored in the Recorder iPhone app over the local network."
+      "description": "Query transcripts stored in the FrameMemo iPhone app over the local network."
     }
   ]
 }

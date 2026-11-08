@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stdio MCP server that queries the Recorder iPhone app over the local network."""
+"""Stdio MCP server that queries the FrameMemo iPhone app over the local network."""
 
 import argparse
 import base64
@@ -119,7 +119,7 @@ def pairing_page(payload, qr_base64, mac_name):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pair with Recorder</title>
+<title>Pair with FrameMemo</title>
 <style>
 body {{ font-family: -apple-system, sans-serif; background:#f6f7f9; color:#12151a; margin:0; }}
 main {{ max-width: 520px; margin: 48px auto; background:#fff; border-radius: 16px; padding: 32px; text-align:center; }}
@@ -133,7 +133,7 @@ button {{ font: inherit; padding: 8px 16px; border-radius: 8px; border: 1px soli
 <body>
 <main>
 <h1>Pair with {mac_name}</h1>
-<p>On your iPhone, open Recorder → Settings → LAN Access → Add computer, then scan this code.</p>
+<p>On your iPhone, open FrameMemo → Settings → LAN Access → Add computer, then scan this code.</p>
 {qr}
 <code id="link">{payload}</code>
 <button onclick="navigator.clipboard.writeText(document.getElementById('link').textContent)">Copy link</button>
@@ -379,7 +379,7 @@ def load_config():
             pass
     if not url or not token:
         raise RuntimeError(
-            "Recorder is not configured. Run: python3 recorder_mcp.py set "
+            "FrameMemo is not configured. Run: python3 recorder_mcp.py set "
             "--url http://<ip>:<port> --token <token>"
         )
     return url.rstrip("/"), token
@@ -409,14 +409,14 @@ def request(path, params=None, body=None):
             auto_pair(force=True)
             raise RuntimeError(
                 "Not authorized. A pairing page has opened on your Mac; pair this "
-                "computer again from Recorder > Settings > LAN Access."
+                "computer again from FrameMemo > Settings > LAN Access."
             )
-        raise RuntimeError("Recorder returned HTTP {}".format(error.code))
+        raise RuntimeError("FrameMemo returned HTTP {}".format(error.code))
     except urllib.error.URLError as error:
         link = pairing_link()
         extra = (
             "\nIf the iPhone changed networks, open this page and scan the code "
-            "from Recorder > Settings > LAN Access (valid for {} minutes):\n{}{}".format(
+            "from FrameMemo > Settings > LAN Access (valid for {} minutes):\n{}{}".format(
                 PAIR_TIMEOUT // 60, link, qr_hint()
             )
             if link
@@ -425,8 +425,8 @@ def request(path, params=None, body=None):
             )
         )
         raise RuntimeError(
-            "Cannot reach Recorder at {} ({}).\n"
-            "Check that the iPhone is unlocked, Recorder is open, and that this Mac "
+            "Cannot reach FrameMemo at {} ({}).\n"
+            "Check that the iPhone is unlocked, FrameMemo is open, and that this Mac "
             "and the iPhone are on the same Wi-Fi.{}".format(
                 base_url, error.reason, extra
             )
@@ -523,7 +523,7 @@ def run_status():
     try:
         base_url, _token = load_config()
     except RuntimeError:
-        print("Recorder is not paired yet.")
+        print("FrameMemo is not paired yet.")
         link = pairing_link()
         if link:
             print("Pair within {} minutes:".format(PAIR_TIMEOUT // 60))
@@ -531,7 +531,7 @@ def run_status():
             if os.path.exists(PAIR_QR):
                 print("QR image: " + PAIR_QR)
             print(
-                "On the iPhone: Recorder > Settings > LAN Access, turn on Enable, "
+                "On the iPhone: FrameMemo > Settings > LAN Access, turn on Enable, "
                 "tap Add computer and scan the page."
             )
         else:
@@ -543,7 +543,7 @@ def run_status():
     except RuntimeError as error:
         print(str(error))
         return 1
-    print("Recorder is reachable at {}.".format(base_url))
+    print("FrameMemo is reachable at {}.".format(base_url))
     return 0
 
 
