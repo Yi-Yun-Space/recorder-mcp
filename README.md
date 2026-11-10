@@ -2,6 +2,10 @@
 
 Lets Claude Code read and summarize the recordings stored in the **FrameMemo** iPhone app, over your local network.
 
+## Supported agent
+
+**This release supports MCP access through Claude Code on Mac only.** Other agents are not supported in this release. This limitation applies to the MCP connection, not the providers you can configure for Ask AI inside the FrameMemo iPhone app.
+
 ## Install
 
 Open a Claude Code session and send this message:
@@ -16,27 +20,28 @@ Then **open a new session**. Plugin tools only load when a session starts.
 
 Pairing runs during install. If that was skipped, the first session that runs the plugin opens a pairing page in your browser. On the iPhone:
 
-1. Open FrameMemo → Settings → LAN Access and turn on **Enable**. Keep that screen open.
+1. Open FrameMemo → Settings → Agent Access and turn on **Allow agent access**. Keep FrameMemo open in the foreground.
 2. Tap **Add computer** and scan the code shown on the Mac.
 3. Tap **Allow**.
 
 The page changes to "Paired with …" once the phone is done.
 
-On the simulator there is no camera: tap **Add computer**, then paste the pairing link shown under the code on the Mac page.
+On the simulator there is no camera: tap **Add computer**, then paste the pairing link shown under the code on the Mac page. You can also choose **Enter pairing link** on the scanner screen when using an iPhone.
 
 ## Requirements
 
-- The iPhone and the Mac on the same Wi-Fi network.
+- Claude Code on a Mac.
+- The iPhone and the Mac on the same trusted local network, with local network access allowed for FrameMemo.
 - `python3` on the Mac (comes with the Xcode Command Line Tools).
-- FrameMemo open on the iPhone, with LAN Access enabled, while you query.
+- FrameMemo open on the iPhone, with **Allow agent access** enabled, while you query.
 
 ## Revoke a computer
 
-In FrameMemo → Settings → LAN Access → **Paired computers**, swipe a computer to remove it. That computer's next request is rejected, and it opens a fresh pairing page.
+In FrameMemo → Settings → Agent Access, swipe a paired computer to remove it. That computer's next request is rejected, and it opens a fresh pairing page.
 
 ## When the recordings can't be reached
 
-Just ask Claude about your recordings. If the tools are missing or the app is unreachable, the plugin's connection check reports what happened, including a pairing code if re-pairing would help. Ask Claude to *check the FrameMemo connection* if you want the report from an otherwise unrelated question.
+Just ask Claude Code about your recordings. If the tools are missing or the app is unreachable, the plugin's connection check reports what happened, including a pairing code if re-pairing would help. Ask Claude to *check the FrameMemo connection* if you want the report from an otherwise unrelated question.
 
 ## Troubleshooting
 
@@ -60,7 +65,7 @@ To skip the pairing page and write the settings directly:
 python3 "<plugin root>/recorder_mcp.py" set --url http://<iphone-ip>:8765 --token <device token>
 ```
 
-The app only issues per-device tokens during pairing, so this is mainly useful when testing the gateway against a known token.
+The app only issues per-device tokens during pairing, so this is mainly useful when testing the local connection with a known token.
 
 ## Installing from a terminal
 
