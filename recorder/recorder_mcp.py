@@ -285,6 +285,60 @@ def run_pair(auto_open=True):
         sys.exit(1)
 
 
+def claim_pair_lock():
+    """Claim the pairing lock atomically; False when another session owns it."""
+
+    directory = os.path.dirname(PAIR_LOCK)
+    if directory:
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except OSError:
+            return False
+
+    for _ in range(2):
+        try:
+            descriptor = os.open(PAIR_LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            try:
+                if time.time() - os.path.getmtime(PAIR_LOCK) < PAIR_TIMEOUT + 60:
+                    return False
+                os.remove(PAIR_LOCK)
+            except OSError:
+                return False
+            continue
+        except OSError:
+            return False
+        try:
+            os.write(descriptor, str(int(time.time())).encode("utf-8"))
+        finally:
+            os.close(descriptor)
+        return True
+    return False
+
+
+def start_pairing(auto_open=True):
+    if not claim_pair_lock():
+        return False
+
+    command = [sys.executable, os.path.abspath(__file__), "pair"]
+    if not auto_open:
+        command.append("--no-open")
+    try:
+        subprocess.Popen(
+            command,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        try:
+            os.remove(PAIR_LOCK)
+        except OSError:
+            pass
+        return False
+    return True
+
+
 def auto_pair(force=False):
     if not force:
         try:
@@ -293,32 +347,7 @@ def auto_pair(force=False):
         except RuntimeError:
             pass
 
-    try:
-        if os.path.exists(PAIR_LOCK):
-            age = time.time() - os.path.getmtime(PAIR_LOCK)
-            if age < PAIR_TIMEOUT + 60:
-                return
-    except OSError:
-        pass
-
-    try:
-        directory = os.path.dirname(PAIR_LOCK)
-        if directory:
-            os.makedirs(directory, exist_ok=True)
-        with open(PAIR_LOCK, "w") as handle:
-            handle.write(str(int(time.time())))
-    except OSError:
-        return
-
-    try:
-        subprocess.Popen(
-            [sys.executable, os.path.abspath(__file__), "pair"],
-            start_new_session=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except OSError:
-        pass
+    start_pairing()
 
 
 def pairing_link():
@@ -338,21 +367,12 @@ def pairing_link():
         return link
 
     try:
-        starting = time.time() - os.path.getmtime(PAIR_LOCK) < PAIR_TIMEOUT
+        starting = time.time() - os.path.getmtime(PAIR_LOCK) < PAIR_TIMEOUT + 60
     except OSError:
         starting = False
 
     if not starting:
-        try:
-            os.makedirs(os.path.dirname(PAIR_URL), exist_ok=True)
-            subprocess.Popen(
-                [sys.executable, os.path.abspath(__file__), "pair", "--no-open"],
-                start_new_session=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except OSError:
-            return None
+        start_pairing(auto_open=False)
 
     for _ in range(40):
         time.sleep(0.1)
