@@ -15,9 +15,12 @@ guard let filter = CIFilter(name: "CIQRCodeGenerator") else { exit(1) }
 filter.setValue(Data(payload.utf8), forKey: "inputMessage")
 filter.setValue("M", forKey: "inputCorrectionLevel")
 
-guard let image = filter.outputImage?.transformed(by: CGAffineTransform(scaleX: 12, y: 12)) else {
+guard let qr = filter.outputImage?.transformed(by: CGAffineTransform(scaleX: 12, y: 12)) else {
     exit(1)
 }
+
+// Composite onto white: a transparent background becomes unreadable on dark themes.
+let image = qr.composited(over: CIImage(color: .white).cropped(to: qr.extent))
 
 let context = CIContext()
 guard let cgImage = context.createCGImage(image, from: image.extent) else { exit(1) }
