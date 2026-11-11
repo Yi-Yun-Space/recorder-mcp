@@ -4,6 +4,7 @@
 import argparse
 import base64
 import http.server
+import ipaddress
 import json
 import os
 import secrets
@@ -42,25 +43,63 @@ def save_config(url, token):
     os.chmod(CONFIG_PATH, 0o600)
 
 
-def lan_ip():
-    for interface in ("en0", "en1"):
-        try:
-            value = subprocess.check_output(
-                ["ipconfig", "getifaddr", interface], text=True
-            ).strip()
-            if value:
-                return value
-        except (OSError, subprocess.SubprocessError):
-            pass
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+def lan_ip(allow_ipv6=True):
+    """Choose a local address, preferring the downstream sharing bridge."""
     try:
-        sock.connect(("8.8.8.8", 80))
-        return sock.getsockname()[0]
-    except OSError:
+        output = subprocess.check_output(["/sbin/ifconfig", "-u"], text=True)
+    except (OSError, subprocess.SubprocessError):
         return "127.0.0.1"
-    finally:
-        sock.close()
+
+    addresses = []
+    sharing_bridges = set()
+    interface = ""
+    for line in output.splitlines():
+        if line and not line[0].isspace():
+            interface = line.split(":", 1)[0]
+            continue
+        fields = line.split()
+        if not interface.startswith(("en", "bridge")) or len(fields) < 2:
+            continue
+        if interface.startswith("bridge") and fields[0] == "member:" and fields[1].startswith("ap"):
+            sharing_bridges.add(interface)
+        if fields[0] not in ("inet", "inet6"):
+            continue
+        address = ipaddress.ip_address(fields[1].split("%", 1)[0])
+        if address.is_loopback or address.is_link_local or address.is_unspecified:
+            continue
+        if address.version == 6 and not allow_ipv6:
+            continue
+        addresses.append((interface, address))
+
+    def preference(candidate):
+        interface, address = candidate
+        if interface in sharing_bridges:
+            return 0, address.version != 6
+        if interface in ("en0", "en1"):
+            return 1, interface, address.version != 4
+        return 2, address.version != 4, interface
+
+    if not addresses:
+        return "127.0.0.1"
+    return str(min(addresses, key=preference)[1])
+
+
+def url_host(address):
+    """Format an IP literal for a URL authority or pairing link."""
+    ip = ipaddress.ip_address(address)
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+        return "[{}]".format(ip)
+    return str(ip)
+
+
+class DualStackPairingServer(http.server.ThreadingHTTPServer):
+    address_family = socket.AF_INET6
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        super().server_bind()
 
 
 def computer_name():
@@ -160,7 +199,6 @@ poll();
 
 def run_pair(auto_open=True):
     nonce = secrets.token_urlsafe(12)
-    ip = lan_ip()
     mac_name = computer_name()
     state = {"paired": None}
     values = {"payload": "", "qr": None}
@@ -226,7 +264,7 @@ def run_pair(auto_open=True):
                 self.reply(400, {"ok": False, "error": "bad_request"})
                 return
 
-            url = "http://{}:{}".format(self.client_address[0], port)
+            url = "http://{}:{}".format(url_host(self.client_address[0]), port)
             save_config(url, token)
             state["paired"] = {"name": name, "url": url}
             self.reply(200, {"ok": True})
@@ -236,10 +274,14 @@ def run_pair(auto_open=True):
             time.sleep(5)
             server.shutdown()
 
-    server = http.server.ThreadingHTTPServer(("0.0.0.0", 0), Handler)
+    if socket.has_dualstack_ipv6():
+        server = DualStackPairingServer(("::", 0), Handler)
+    else:
+        server = http.server.ThreadingHTTPServer(("0.0.0.0", 0), Handler)
+    ip = lan_ip(allow_ipv6=server.address_family == socket.AF_INET6)
     port = server.server_address[1]
     values["payload"] = "recorder://pair?host={}&port={}&nonce={}&name={}".format(
-        ip, port, nonce, urllib.parse.quote(mac_name)
+        urllib.parse.quote(url_host(ip), safe=""), port, nonce, urllib.parse.quote(mac_name)
     )
     page_url = "http://127.0.0.1:{}/".format(port)
     print("Pairing page: " + page_url, file=sys.stderr)
