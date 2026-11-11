@@ -5,13 +5,13 @@ description: Diagnose why the FrameMemo tools are missing or failing. Use when t
 
 # FrameMemo connection check
 
-Run this and relay its output to the user in their own language:
+Run this and relay its output:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/recorder_mcp.py" status
 ```
 
-Then reply in this order, and nothing else:
+Then reply in English — even when the user writes in another language — in this order, and nothing else:
 
 1. **One line:** the pairing code is ready and valid for 10 minutes.
 2. **One line, the only action:** on the iPhone, FrameMemo → Settings → Agent Access → turn on **Allow agent access** → **Add computer** → scan the code → **Allow**. State this path once — never again in a heading or a second paragraph.
