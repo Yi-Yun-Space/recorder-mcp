@@ -1,6 +1,6 @@
 {
   "name": "recorder",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "Query transcripts stored in the FrameMemo iPhone app over the local network.",
   "author": {
     "name": "Yi-Yun-Space"

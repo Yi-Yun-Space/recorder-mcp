@@ -241,22 +241,27 @@ def run_pair(auto_open=True):
     values["payload"] = "recorder://pair?host={}&port={}&nonce={}&name={}".format(
         ip, port, nonce, urllib.parse.quote(mac_name)
     )
-    values["qr"] = render_qr(values["payload"])
-
     page_url = "http://127.0.0.1:{}/".format(port)
     print("Pairing page: " + page_url, file=sys.stderr)
+    # Publish the page and the lock before drawing the QR: drawing shells out to
+    # Swift and can take seconds, while pairing_link() only waits a few.
     try:
         os.makedirs(os.path.dirname(PAIR_URL), exist_ok=True)
         with open(PAIR_URL, "w") as handle:
             handle.write(page_url)
         with open(PAIR_LOCK, "w") as handle:
             handle.write(str(int(time.time())))
-        if values["qr"]:
+    except OSError:
+        pass
+
+    values["qr"] = render_qr(values["payload"])
+    if values["qr"]:
+        try:
             with open(PAIR_QR, "wb") as handle:
                 handle.write(base64.b64decode(values["qr"]))
             print("QR image: " + PAIR_QR, file=sys.stderr)
-    except OSError:
-        pass
+        except OSError:
+            pass
     if auto_open:
         threading.Thread(target=webbrowser.open, args=(page_url,), daemon=True).start()
 
@@ -432,7 +437,10 @@ def request(path, params=None, body=None):
                 "computer again from FrameMemo > Settings > Agent Access."
             )
         raise RuntimeError("FrameMemo returned HTTP {}".format(error.code))
-    except urllib.error.URLError as error:
+    except OSError as error:
+        # URLError is an OSError; a peer that drops the response mid-read raises
+        # ConnectionResetError, which is an OSError but not a URLError.
+        reason = getattr(error, "reason", error)
         link = pairing_link()
         extra = (
             "\nIf the iPhone changed networks, open this page and scan the code "
@@ -448,7 +456,7 @@ def request(path, params=None, body=None):
             "Cannot reach FrameMemo at {} ({}).\n"
             "Check that the iPhone is unlocked, FrameMemo is open, and that this Mac "
             "and the iPhone are on the same Wi-Fi.{}".format(
-                base_url, error.reason, extra
+                base_url, reason, extra
             )
         )
 
