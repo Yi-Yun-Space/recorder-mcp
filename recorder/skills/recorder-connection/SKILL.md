@@ -17,7 +17,7 @@ Then reply in English — even when the user writes in another language — in t
 2. **One line, the only action:** on the iPhone, FrameMemo → Settings → Agent Access → turn on **Allow agent access** → **Add computer** → scan the code → **Allow**. State this path once — never again in a heading or a second paragraph.
 3. **One fallback, only if the QR image is not shown:** open the `http://127.0.0.1:…` link on its own line and use the code on that page.
 4. **Only when the recorder tools are missing in this session** — it started before the plugin was installed — add one line asking the user to open a new session. If the tools are already available here, do not mention it.
-5. **Last:** send the `QR image:` file with `display` set to `render`. The default attachment card is only a thumbnail and cannot be scanned.
+5. **Last:** send the `QR image:` file with `display` set to `render`, straight from that path — do not copy it into the working directory. The default attachment card is only a thumbnail and cannot be scanned.
 
 Do not offer a "copy and paste the link into the app" path — the user has an iPhone and scans the code. Do not summarise what the plugin does or how you reviewed its source; the user is waiting to scan.
 Do not retry the recorder tools while the check reports the app is unreachable.
