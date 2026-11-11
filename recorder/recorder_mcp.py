@@ -133,7 +133,7 @@ button {{ font: inherit; padding: 8px 16px; border-radius: 8px; border: 1px soli
 <body>
 <main>
 <h1>Pair with {mac_name}</h1>
-<p>On your iPhone, open FrameMemo → Settings → LAN Access → Add computer, then scan this code.</p>
+<p>On your iPhone, open FrameMemo → Settings → Agent Access → Add computer, then scan this code.</p>
 {qr}
 <code id="link">{payload}</code>
 <button onclick="navigator.clipboard.writeText(document.getElementById('link').textContent)">Copy link</button>
@@ -429,14 +429,14 @@ def request(path, params=None, body=None):
             auto_pair(force=True)
             raise RuntimeError(
                 "Not authorized. A pairing page has opened on your Mac; pair this "
-                "computer again from FrameMemo > Settings > LAN Access."
+                "computer again from FrameMemo > Settings > Agent Access."
             )
         raise RuntimeError("FrameMemo returned HTTP {}".format(error.code))
     except urllib.error.URLError as error:
         link = pairing_link()
         extra = (
             "\nIf the iPhone changed networks, open this page and scan the code "
-            "from FrameMemo > Settings > LAN Access (valid for {} minutes):\n{}{}".format(
+            "from FrameMemo > Settings > Agent Access (valid for {} minutes):\n{}{}".format(
                 PAIR_TIMEOUT // 60, link, qr_hint()
             )
             if link
@@ -551,7 +551,7 @@ def run_status():
             if os.path.exists(PAIR_QR):
                 print("QR image: " + PAIR_QR)
             print(
-                "On the iPhone: FrameMemo > Settings > LAN Access, turn on Enable, "
+                "On the iPhone: FrameMemo > Settings > Agent Access, turn on Allow agent access, "
                 "tap Add computer and scan the page."
             )
         else:
