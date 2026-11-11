@@ -11,11 +11,14 @@ Run this and relay its output to the user in their own language:
 python3 "${CLAUDE_PLUGIN_ROOT}/recorder_mcp.py" status
 ```
 
-Then:
+Then reply in this order, and nothing else:
 
-- Put any `http://127.0.0.1:…` link on its own line so the user can click it.
-- If the output names a `QR image:` path and that file exists, send that image **as the last step of your reply** — all text first — and set `display` to `render`: the default attachment card is only a thumbnail and cannot be scanned.
-- Say the code stays valid for 10 minutes, and that pairing happens on the iPhone under FrameMemo → Settings → Agent Access.
-- Only when the recorder tools are missing in this session — it started before the plugin was installed — finish by telling the user to open a new session: the plugin's tools load when a session starts. If the tools are already available here, do not mention it.
-- Do not retry the recorder tools while the check reports the app is unreachable.
-- Do not try to read recordings yourself through Bash, files, or the network.
+1. **One line:** the pairing code is ready and valid for 10 minutes.
+2. **One line, the only action:** on the iPhone, FrameMemo → Settings → Agent Access → turn on **Allow agent access** → **Add computer** → scan the code → **Allow**. State this path once — never again in a heading or a second paragraph.
+3. **One fallback, only if the QR image is not shown:** open the `http://127.0.0.1:…` link on its own line and use the code on that page.
+4. **Only when the recorder tools are missing in this session** — it started before the plugin was installed — add one line asking the user to open a new session. If the tools are already available here, do not mention it.
+5. **Last:** send the `QR image:` file with `display` set to `render`. The default attachment card is only a thumbnail and cannot be scanned.
+
+Do not offer a "copy and paste the link into the app" path — the user has an iPhone and scans the code. Do not summarise what the plugin does or how you reviewed its source; the user is waiting to scan.
+Do not retry the recorder tools while the check reports the app is unreachable.
+Do not try to read recordings yourself through Bash, files, or the network.
