@@ -30,6 +30,104 @@ PROTOCOL_VERSION = "2025-06-18"
 # The app is reached over the LAN, where a system HTTP proxy would answer 502.
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
+# Static mirror of FrameMemo's /tools definitions for headless schema inspection
+# (e.g. Glama container checks) when no paired iPhone is on the local network.
+STATIC_TOOLS = [
+    {
+        "name": "list_recordings",
+        "description": (
+            'Locate recordings the user has in mind — one of them, or everything in a time window. '
+            'Call this whenever the user refers to a recording by name ("the one titled …", '
+            '"that design review"), by a point in time ("yesterday\'s recording"), or by a range '
+            '("last week", "this morning"), even when no exact title is given. Put the user\'s own '
+            'words in title (matched exactly first, then as a substring, then against summaries) '
+            'and any time hint in dateFrom/dateTo; leave title empty when only a range is meant. '
+            'Returns uid, title, date, duration, and summary for each match.'
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": 'Words the user used to name the recording: a title, a meeting name, or a phrase like "that technical design review".',
+                },
+                "dateFrom": {
+                    "type": "string",
+                    "description": "First day to include, YYYY-MM-DD in local time.",
+                },
+                "dateTo": {
+                    "type": "string",
+                    "description": "Last day to include, YYYY-MM-DD in local time.",
+                },
+                "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "search_recordings",
+        "description": (
+            "Search inside transcripts using keyword and semantic retrieval. Returns ranked "
+            "transcript excerpts with recording metadata and audio timestamps. Does not match "
+            "titles or dates; use list_recordings for a named recording or a date range."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Natural-language query.",
+                },
+                "scope": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {"type": "string", "enum": ["all", "recordings"]},
+                        "recordingUids": {"type": "array", "items": {"type": "integer"}},
+                    },
+                },
+                "filters": {
+                    "type": "object",
+                    "properties": {
+                        "dateFrom": {
+                            "type": "string",
+                            "description": "First day to include, YYYY-MM-DD in local time.",
+                        },
+                        "dateTo": {
+                            "type": "string",
+                            "description": "Last day to include, YYYY-MM-DD in local time.",
+                        },
+                    },
+                },
+                "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "get_recording",
+        "description": (
+            "Fetch one recording by uid, including its summary, metadata, and full timestamped "
+            "transcript. Use the uid returned by list_recordings or search_recordings. Call this "
+            "once per recording; several recordings may be requested in the same turn."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "uid": {
+                    "type": "integer",
+                    "description": "Recording uid from a list_recordings or search_recordings result.",
+                }
+            },
+            "required": ["uid"],
+        },
+    },
+]
+
+
+def use_static_tools():
+    return bool(os.environ.get("GLAMA_VERSION") or os.environ.get("RECORDER_MCP_STATIC_TOOLS") == "1")
+
+
 def fetch_tools():
     return request("/tools", {}).get("tools", [])
 
@@ -539,6 +637,8 @@ def handle(message):
         try:
             tools = fetch_tools()
         except Exception as error:
+            if use_static_tools():
+                return result(request_id, {"tools": STATIC_TOOLS})
             return failure(request_id, -32603, str(error))
         return result(request_id, {"tools": tools})
 
@@ -562,7 +662,8 @@ def handle(message):
 
 
 def serve():
-    auto_pair()
+    if not use_static_tools():
+        auto_pair()
 
     for line in sys.stdin:
         line = line.strip()
