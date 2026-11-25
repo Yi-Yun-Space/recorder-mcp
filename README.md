@@ -8,6 +8,14 @@ Lets Claude Code search, read, and summarize meeting transcripts stored in the [
 
 **This release supports MCP access through Claude Code on Mac only.** Other agents are not supported in this release. This limitation applies to the MCP connection, not the providers you can configure for Ask AI inside the FrameMemo iPhone app.
 
+## Available MCP tools (text-only read access)
+
+A paired Mac can search and read **text only** across your local FrameMemo library over your local Wi-Fi network (no cloud gateway). Original audio recordings and whiteboard photos are never exposed through MCP.
+
+- `list_recordings` — Find recordings by meeting title or date range (`dateFrom` / `dateTo`), returning ID, title, date, duration, and on-device summary.
+- `search_recordings` — Run hybrid keyword and semantic search across completed transcripts and return matching excerpts with audio timestamps.
+- `get_recording` — Retrieve the full timestamped transcript and metadata for a specific recording ID.
+
 ## Install
 
 Open a Claude Code session and send this message:

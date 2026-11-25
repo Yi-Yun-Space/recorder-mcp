@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Yi-Yun-Space/recorder-mcp",
+  "title": "FrameMemo",
+  "description": "Search and read local iPhone meeting transcripts from FrameMemo over local Wi-Fi (text-only).",
+  "version": "0.3.19",
+  "websiteUrl": "https://framememo.aimakemore.com/guides/claude-code-mcp-meeting-notes/",
+  "repository": {
+    "url": "https://github.com/Yi-Yun-Space/recorder-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/Yi-Yun-Space/recorder-mcp/releases/download/v0.3.19/framememo-recorder-mcp-0.3.19.mcpb",
+      "fileSha256": "0654af4e6205e0ef19fda15fff4bc8da7a9095d6776fef963dec42b89c715bb8",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
