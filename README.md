@@ -1,6 +1,8 @@
 # FrameMemo MCP plugin
 
-Lets Claude Code read and summarize the recordings stored in the **FrameMemo** iPhone app, over your local network.
+Lets Claude Code search, read, and summarize meeting transcripts stored in the [**FrameMemo**](https://framememo.aimakemore.com/) offline iPhone voice recorder app, directly over your local network.
+
+[Website](https://framememo.aimakemore.com/) · [Setup Guide](https://framememo.aimakemore.com/guides/claude-code-mcp-meeting-notes/) · [On-Device ASR Benchmark](https://framememo.aimakemore.com/engineering/on-device-transcription-benchmark/) · [Privacy Policy](https://framememo.aimakemore.com/privacy/#claude-code-sharing) · [Support](https://framememo.aimakemore.com/support/)
 
 ## Supported agent
 
@@ -80,3 +82,10 @@ Install and enable it per user (`--scope user` is the default for marketplaces),
 
 - `.claude-plugin/marketplace.json` — the marketplace this repository publishes.
 - `recorder/` — the plugin itself: the MCP server and the connection-check skill.
+
+## Learn more
+
+- [FrameMemo Website](https://framememo.aimakemore.com/) — offline iPhone voice recorder with whiteboard photos, on-device transcription, and local summaries.
+- [Connect iPhone Meeting Transcripts to Claude Code via MCP](https://framememo.aimakemore.com/guides/claude-code-mcp-meeting-notes/) — full walkthrough, prompt ideas, and security details.
+- [FrameMemo vs. Apple Voice Memos](https://framememo.aimakemore.com/compare/apple-voice-memos/) — how local MCP access compares with copying transcripts manually.
+- [Claude Code Data-Sharing Disclosure](https://framememo.aimakemore.com/privacy/#claude-code-sharing) — what text is shared with a paired Mac and how revocation works.
